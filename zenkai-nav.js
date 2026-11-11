@@ -64,3 +64,54 @@ var ZEINES = [
     if(ev.key==="Escape") tanca();
   });
 })();
+
+/* ---------------- efectes d'entrada ----------------
+   Les targetes entren desenfocades, una darrere l'altra, quan s'obre la pàgina o
+   arriben les dades. Si l'efecte sortís també quan escrius al cercador o canvies un
+   filtre, cada tecla faria parpellejar la llista: per això només s'anima durant els
+   primers segons després d'obrir o d'entrar, i mai just després d'un clic o una tecla. */
+(function(){
+  if(window.matchMedia && matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  if(!("IntersectionObserver" in window) || !("MutationObserver" in window)) return;
+  var SEL = ".card,.stat,.reel,.rec";
+  var obert = performance.now(), ultimaAccio = -1e9, lotT = 0, lotN = 0;
+  ["keydown","input","pointerdown"].forEach(function(n){
+    document.addEventListener(n, function(){ ultimaAccio = performance.now(); }, true);
+  });
+  var io = new IntersectionObserver(function(en){
+    en.forEach(function(x){
+      if(!x.isIntersecting) return;
+      var e = x.target; io.unobserve(e);
+      e.classList.remove("zfx-pre"); e.classList.add("zfx-in");
+      setTimeout(function(){ e.classList.remove("zfx-in"); }, 1500);
+    });
+  }, {threshold:.08});
+  function prepara(n){
+    if(n.nodeType !== 1) return;
+    var l = [];
+    if(n.matches && n.matches(SEL)) l.push(n);
+    if(n.querySelectorAll) Array.prototype.push.apply(l, n.querySelectorAll(SEL));
+    l.forEach(function(e){
+      if(e.__zfx) return; e.__zfx = 1;
+      var ara = performance.now();
+      if(ara - obert > 4000 || ara - ultimaAccio < 800) return;
+      if(ara - lotT > 200) lotN = 0;
+      lotT = ara;
+      e.style.setProperty("--zi", Math.min(lotN++, 8));
+      e.classList.add("zfx-pre");
+      io.observe(e);
+      /* per si una targeta queda amagada molt de temps: que no es quedi invisible */
+      setTimeout(function(){ e.classList.remove("zfx-pre"); }, 8000);
+    });
+  }
+  function engega(){
+    prepara(document.body);
+    new MutationObserver(function(ms){
+      ms.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes, prepara); });
+    }).observe(document.body, {childList:true, subtree:true});
+    var g = document.getElementById("gate");
+    if(g) new MutationObserver(function(){ if(g.hidden) obert = performance.now(); })
+      .observe(g, {attributes:true, attributeFilter:["hidden"]});
+  }
+  if(document.body) engega(); else document.addEventListener("DOMContentLoaded", engega);
+})();

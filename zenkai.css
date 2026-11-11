@@ -48,3 +48,22 @@
 @media(max-width:900px){
   input,select,textarea{font-size:16px!important}
 }
+
+/* ---------- efectes: entrada desenfocada i escalonada, i targetes que s'aixequen ----------
+   Els posa zenkai-nav.js (classes zfx-pre / zfx-in) només quan la pàgina s'obre o
+   quan arriben les dades, mai mentre escrius o filtres. */
+.zfx-pre{opacity:0}
+.zfx-in{animation:zfx-revela .7s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(var(--zi,0)*70ms)}
+@keyframes zfx-revela{
+  from{opacity:0;filter:blur(10px);transform:translateY(16px) scale(.97)}
+  to{opacity:1;filter:blur(0);transform:none}}
+/* només les targetes que són un botó (bobines, estadístiques, reels): els plafons amb camps no es mouen */
+.card:has(>.cardmain),.stat,.reel,.rec{
+  transition:transform .25s cubic-bezier(.2,.7,.2,1),border-color .2s,box-shadow .25s}
+.card:has(>.cardmain):hover,.stat:hover,.reel:hover,.rec:hover{
+  transform:translateY(-3px);border-color:var(--brand-orange);
+  box-shadow:0 14px 30px -20px rgba(230,115,36,.55)}
+.btn:active,.toolpick>button:active{transform:scale(.97)}
+@media(prefers-reduced-motion:reduce){
+  .zfx-pre{opacity:1}.zfx-in{animation:none}
+  .card:has(>.cardmain):hover,.stat:hover,.reel:hover,.rec:hover{transform:none}}
